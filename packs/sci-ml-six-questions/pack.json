@@ -1,0 +1,1055 @@
+{
+  "format": "fcr/rulepack",
+  "format_version": "1.0",
+  "id": "sci-ml-six-questions",
+  "version": "1.0.0",
+  "title": "科研 ML 六问前置校验",
+  "description": "在建模之前用六个问题（目标/样本/表示/规模/先验/交付）检查科研 ML 任务的方法前提；输出缺项、红旗、必检项、候选模型族与结论。红旗是启发式，不替代验证。",
+  "license": "MIT",
+  "status": "draft",
+  "homepage": "",
+  "fields": {
+    "goal_type": {
+      "type": "enum",
+      "values": [
+        "regression",
+        "classification",
+        "ranking",
+        "generation",
+        "clustering",
+        "anomaly"
+      ],
+      "description": "科学目标与任务类型（你怎么使用答案）"
+    },
+    "metric": {
+      "type": "enum",
+      "values": [
+        "rmse",
+        "mae",
+        "accuracy",
+        "f1",
+        "recall_k",
+        "ndcg",
+        "other"
+      ],
+      "description": "评价指标"
+    },
+    "task_use": {
+      "type": "string",
+      "description": "答案给谁用、用来做什么（自由文本）"
+    },
+    "sample_unit": {
+      "type": "enum",
+      "values": [
+        "molecule",
+        "structure",
+        "sample",
+        "experiment",
+        "time_window",
+        "image_field",
+        "other"
+      ],
+      "description": "一个样本与独立单位"
+    },
+    "n_eff": {
+      "type": "integer",
+      "description": "有效独立样本数（不是文件行数）"
+    },
+    "leakage": {
+      "type": "array",
+      "values": [
+        "same_system",
+        "same_batch",
+        "same_field",
+        "same_time",
+        "preprocess_full"
+      ],
+      "description": "可能存在的同源泄漏（可多选）"
+    },
+    "modality": {
+      "type": "array",
+      "values": [
+        "table",
+        "image",
+        "sequence",
+        "graph",
+        "pointcloud",
+        "spatiotemporal"
+      ],
+      "description": "数据模态（可多选）"
+    },
+    "structure": {
+      "type": "array",
+      "values": [
+        "neighborhood",
+        "order",
+        "topology",
+        "coordinates",
+        "boundary",
+        "composition"
+      ],
+      "description": "必须保留的数据结构（可多选）"
+    },
+    "label_ratio": {
+      "type": "enum",
+      "values": [
+        "all",
+        "most",
+        "half",
+        "few",
+        "none"
+      ],
+      "description": "标签比例"
+    },
+    "quality": {
+      "type": "array",
+      "values": [
+        "missing",
+        "duplicate",
+        "outlier",
+        "measurement_error",
+        "imbalance",
+        "noisy_label"
+      ],
+      "description": "已知数据质量问题（可多选）"
+    },
+    "prior": {
+      "type": "array",
+      "values": [
+        "symmetry",
+        "conservation",
+        "monotonic",
+        "locality",
+        "periodicity",
+        "mechanism",
+        "infeasible",
+        "none_known"
+      ],
+      "description": "已知科学先验（没有就选 none_known）"
+    },
+    "delivery": {
+      "type": "array",
+      "values": [
+        "explanation",
+        "uncertainty",
+        "extrapolation",
+        "cost",
+        "latency",
+        "alarm"
+      ],
+      "description": "交付要求（可多选）"
+    },
+    "baseline": {
+      "type": "enum",
+      "values": [
+        "linear_tree",
+        "cnn",
+        "rnn",
+        "gnn",
+        "transformer",
+        "pinn",
+        "none"
+      ],
+      "description": "拟用的最小 baseline"
+    },
+    "data_source": {
+      "type": "enum",
+      "values": [
+        "experiment",
+        "literature",
+        "simulation",
+        "public"
+      ],
+      "description": "数据来源"
+    }
+  },
+  "atoms": [
+    "append_once",
+    "set_default",
+    "set_field"
+  ],
+  "rules": [
+    {
+      "rule_id": "M01",
+      "priority": 1,
+      "group": "missing",
+      "condition": "state.get('goal_type') is None",
+      "description": "缺少第1问：科学目标与任务类型",
+      "evidence": {
+        "kind": "standard",
+        "note": "完整性门控：缺项优先于红黄灯；缺项不清不谈模型"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'missing_inputs'",
+            "value": "第1问：科学目标与任务类型"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "M02",
+      "priority": 2,
+      "group": "missing",
+      "condition": "state.get('metric') is None",
+      "description": "缺少第1问：评价指标",
+      "evidence": {
+        "kind": "standard",
+        "note": "完整性门控：没有指标就没有可比性"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'missing_inputs'",
+            "value": "第1问：评价指标"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "M03",
+      "priority": 3,
+      "group": "missing",
+      "condition": "state.get('sample_unit') is None",
+      "description": "缺少第2问：样本与独立单位",
+      "evidence": {
+        "kind": "standard",
+        "note": "完整性门控：样本单位决定切分方式"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'missing_inputs'",
+            "value": "第2问：一个样本与独立单位"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "M04",
+      "priority": 4,
+      "group": "missing",
+      "condition": "state.get('n_eff') is None",
+      "description": "缺少第2问：有效样本量 N",
+      "evidence": {
+        "kind": "standard",
+        "note": "完整性门控：有效 N 不是行数"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'missing_inputs'",
+            "value": "第2问：有效样本量 N"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "M05",
+      "priority": 5,
+      "group": "missing",
+      "condition": "state.get('modality') is None",
+      "description": "缺少第3问：数据模态",
+      "evidence": {
+        "kind": "standard",
+        "note": "完整性门控：模态决定表示"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'missing_inputs'",
+            "value": "第3问：数据模态"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "M06",
+      "priority": 6,
+      "group": "missing",
+      "condition": "state.get('label_ratio') is None",
+      "description": "缺少第4问：标签比例",
+      "evidence": {
+        "kind": "standard",
+        "note": "完整性门控：标签比例决定监督是否可行"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'missing_inputs'",
+            "value": "第4问：标签比例"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "M07",
+      "priority": 7,
+      "group": "missing",
+      "condition": "state.get('prior') is None",
+      "description": "缺少第5问：科学先验",
+      "evidence": {
+        "kind": "standard",
+        "note": "完整性门控：先验决定模型结构"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'missing_inputs'",
+            "value": "第5问：科学先验（没有就选 none_known）"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "M08",
+      "priority": 8,
+      "group": "missing",
+      "condition": "state.get('delivery') is None",
+      "description": "缺少第6问：交付要求",
+      "evidence": {
+        "kind": "standard",
+        "note": "完整性门控：交付要求决定指标与不确定性"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'missing_inputs'",
+            "value": "第6问：交付要求"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R20",
+      "priority": 20,
+      "group": "red",
+      "condition": "state.get('goal_type') == 'ranking' and (state.get('metric') == 'rmse' or state.get('metric') == 'mae')",
+      "description": "排序任务用了回归指标",
+      "evidence": {
+        "kind": "standard",
+        "note": "排序任务应使用 Recall@k / NDCG 等排序度量",
+        "source": "信息检索标准度量"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'red_flags'",
+            "value": "排序任务用了 RMSE/MAE：它们不反映前 k 名是否抓对"
+          }
+        },
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "改用 Recall@k 或 NDCG，并先定义 k"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R21",
+      "priority": 21,
+      "group": "red",
+      "condition": "state.get('n_eff') is not None and state.get('n_eff') < 100 and (state.get('baseline') == 'cnn' or state.get('baseline') == 'rnn' or state.get('baseline') == 'gnn' or state.get('baseline') == 'transformer')",
+      "description": "小样本直接上大模型",
+      "evidence": {
+        "kind": "heuristic",
+        "note": "容量-数据匹配经验；阈值 N<100 未校准"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'red_flags'",
+            "value": "N<100 却直接上 CNN/RNN/GNN/Transformer：容量与数据不匹配"
+          }
+        },
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "先跑线性/树 baseline；或换先验更强、参数更少的模型"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R22",
+      "priority": 22,
+      "group": "red",
+      "condition": "state.get('leakage') is not None and 'same_system' in state.get('leakage')",
+      "description": "同体系样本跨集",
+      "evidence": {
+        "kind": "literature",
+        "note": "组泄漏：同体系样本跨训练/测试集",
+        "source": "Kapoor & Narayanan 2023; Kaufman et al. 2012"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'red_flags'",
+            "value": "同一体系/成分族的样本跨训练与测试：指标可能是同源泄漏"
+          }
+        },
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "按体系整组切分，再统计有效 N"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R23",
+      "priority": 23,
+      "group": "red",
+      "condition": "state.get('leakage') is not None and 'same_batch' in state.get('leakage')",
+      "description": "同批次样本跨集",
+      "evidence": {
+        "kind": "literature",
+        "note": "批次效应：同批次样本跨集",
+        "source": "Kaufman et al. 2012"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'red_flags'",
+            "value": "同一实验批次的样本跨集：批次效应会被当成模型能力"
+          }
+        },
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "按批次整组切分，并做跨批次验证"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R24",
+      "priority": 24,
+      "group": "red",
+      "condition": "state.get('leakage') is not None and 'same_field' in state.get('leakage')",
+      "description": "同视场/同对象样本跨集",
+      "evidence": {
+        "kind": "literature",
+        "note": "对象/视场级泄漏：同一对象的切片跨集",
+        "source": "Kapoor & Narayanan 2023"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'red_flags'",
+            "value": "同一视场/同一对象的多个切片跨集：模型可能只认出了对象"
+          }
+        },
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "按对象/视场整组切分"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R25",
+      "priority": 25,
+      "group": "red",
+      "condition": "state.get('leakage') is not None and 'preprocess_full' in state.get('leakage')",
+      "description": "预处理用了全量数据",
+      "evidence": {
+        "kind": "literature",
+        "note": "预处理泄漏：缩放/填充/特征选择用全量数据",
+        "source": "Kaufman et al. 2012"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'red_flags'",
+            "value": "缩放/填充/特征选择用了全量数据：验证集信息泄漏进训练"
+          }
+        },
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "预处理规则只在训练集拟合，再应用到验证/测试"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R26",
+      "priority": 26,
+      "group": "red",
+      "condition": "(state.get('goal_type') == 'regression' or state.get('goal_type') == 'classification' or state.get('goal_type') == 'ranking') and (state.get('label_ratio') == 'few' or state.get('label_ratio') == 'none')",
+      "description": "监督任务标签不足",
+      "evidence": {
+        "kind": "standard",
+        "note": "标签不足时改任务，或半监督/主动学习/迁移"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'red_flags'",
+            "value": "监督任务但标签比例是 few/none：当前数据不足以支撑监督学习"
+          }
+        },
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "先解决标签：主动学习/弱监督/迁移学习，或改任务"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R27",
+      "priority": 27,
+      "group": "red",
+      "condition": "state.get('goal_type') == 'classification' and state.get('quality') is not None and 'imbalance' in state.get('quality')",
+      "description": "分类类别不平衡",
+      "evidence": {
+        "kind": "standard",
+        "note": "不平衡分类用 PR 曲线/AUC 与代价敏感指标",
+        "source": "Saito & Rehmsmeier 2015"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "用 PR 曲线/AUC 与代价敏感指标，不看准确率"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R28",
+      "priority": 28,
+      "group": "red",
+      "condition": "state.get('prior') is not None and 'symmetry' in state.get('prior') and (state.get('baseline') == 'transformer' or state.get('baseline') == 'cnn' or state.get('baseline') == 'rnn')",
+      "description": "有对称先验却用普通网络",
+      "evidence": {
+        "kind": "literature",
+        "note": "对称先验应进入模型结构（等变网络）",
+        "source": "Cohen & Welling 2016"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'red_flags'",
+            "value": "明知有旋转/平移对称，却用普通 CNN/RNN/Transformer：先验没有进入模型"
+          }
+        },
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "改用等变网络，或把对称写进数据表示/增强/约束"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R29",
+      "priority": 29,
+      "group": "red",
+      "condition": "state.get('prior') is not None and ('conservation' in state.get('prior') or 'mechanism' in state.get('prior')) and state.get('baseline') != 'pinn'",
+      "description": "守恒/机理先验未注入",
+      "evidence": {
+        "kind": "literature",
+        "note": "守恒/机理先验可用 PINN 或机理代理",
+        "source": "Raissi et al. 2019"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "把守恒/机理写成约束损失（PINN）或机理+MLP 代理"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R30",
+      "priority": 30,
+      "group": "red",
+      "condition": "state.get('delivery') is not None and 'explanation' in state.get('delivery') and (state.get('baseline') == 'cnn' or state.get('baseline') == 'rnn' or state.get('baseline') == 'gnn' or state.get('baseline') == 'transformer')",
+      "description": "要可解释但候选是黑箱",
+      "evidence": {
+        "kind": "heuristic",
+        "note": "可解释交付与黑箱冲突；未校准"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'red_flags'",
+            "value": "交付要求可解释，但候选是黑箱：结论无法逐条解释"
+          }
+        },
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "加解释/校准，或改用可解释基线（线性/树/机理）"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R31",
+      "priority": 31,
+      "group": "red",
+      "condition": "state.get('quality') is not None and ('missing' in state.get('quality') or 'duplicate' in state.get('quality') or 'outlier' in state.get('quality'))",
+      "description": "数据质量问题",
+      "evidence": {
+        "kind": "standard",
+        "note": "数据卡：记录缺失/异常/去重规则及其影响",
+        "source": "Gebru et al. 2021"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "数据卡记录缺失/异常/去重规则，并说明处理对结论的影响"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R32",
+      "priority": 32,
+      "group": "red",
+      "condition": "state.get('delivery') is not None and 'uncertainty' in state.get('delivery')",
+      "description": "交付要求不确定度",
+      "evidence": {
+        "kind": "standard",
+        "note": "不确定度需报告并检查校准",
+        "source": "Guo et al. 2017"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "报告不确定度（置信区间/分位数/集成方差），并检查校准"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R33",
+      "priority": 33,
+      "group": "red",
+      "condition": "state.get('delivery') is not None and 'extrapolation' in state.get('delivery')",
+      "description": "交付要求外推",
+      "evidence": {
+        "kind": "standard",
+        "note": "外推需单独外推集与适用域声明"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "单独划外推集，写明适用域与超出后的处理"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R34",
+      "priority": 34,
+      "group": "red",
+      "condition": "state.get('delivery') is not None and 'alarm' in state.get('delivery')",
+      "description": "交付要求失败报警",
+      "evidence": {
+        "kind": "heuristic",
+        "note": "失败报警阈值需按场景定义；未校准"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "定义失败信号与报警阈值（输入越界/不确定度过大/分布漂移）"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R35",
+      "priority": 35,
+      "group": "red",
+      "condition": "state.get('baseline') is None or state.get('baseline') == 'none'",
+      "description": "没有最小 baseline",
+      "evidence": {
+        "kind": "standard",
+        "note": "先建最小 baseline，再谈升级"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "先建立最小 baseline（表格先线性/树），再谈升级"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R36",
+      "priority": 36,
+      "group": "red",
+      "condition": "state.get('prior') is not None and 'symmetry' in state.get('prior') and state.get('modality') is not None and 'pointcloud' in state.get('modality')",
+      "description": "点云有对称先验",
+      "evidence": {
+        "kind": "literature",
+        "note": "3D/点云需处理旋转、平移、排列不变性",
+        "source": "Cohen & Welling 2016"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "3D/点云要处理旋转、平移、排列不变性，优先等变网络"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "R37",
+      "priority": 37,
+      "group": "red",
+      "condition": "state.get('data_source') == 'literature' and state.get('quality') is not None and 'measurement_error' in state.get('quality')",
+      "description": "跨文献测量误差",
+      "evidence": {
+        "kind": "standard",
+        "note": "跨文献数据按来源分层验证；报告测量误差与异质性"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'required_checks'",
+            "value": "跨文献数据要报告测量误差与来源异质性，按来源分层验证"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "C60",
+      "priority": 60,
+      "group": "candidate",
+      "condition": "state.get('modality') is not None and 'graph' in state.get('modality') and state.get('structure') is not None and 'topology' in state.get('structure')",
+      "description": "图结构 → GNN",
+      "evidence": {
+        "kind": "heuristic",
+        "note": "图结构+拓扑 -> GNN；非排行榜；未校准"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'candidate_families'",
+            "value": "GNN（图神经网络）"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "C61",
+      "priority": 61,
+      "group": "candidate",
+      "condition": "state.get('modality') is not None and 'image' in state.get('modality') and state.get('structure') is not None and 'neighborhood' in state.get('structure')",
+      "description": "图像邻域 → CNN/预训练",
+      "evidence": {
+        "kind": "heuristic",
+        "note": "图像+邻域 -> CNN/预训练；非排行榜；未校准"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'candidate_families'",
+            "value": "CNN / 预训练视觉模型"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "C62",
+      "priority": 62,
+      "group": "candidate",
+      "condition": "state.get('modality') is not None and 'sequence' in state.get('modality') and state.get('structure') is not None and 'order' in state.get('structure')",
+      "description": "序列顺序 → RNN/TCN/Transformer",
+      "evidence": {
+        "kind": "heuristic",
+        "note": "序列+顺序 -> RNN/TCN/Transformer；非排行榜；未校准"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'candidate_families'",
+            "value": "RNN / TCN / Transformer"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "C63",
+      "priority": 63,
+      "group": "candidate",
+      "condition": "state.get('modality') is not None and 'pointcloud' in state.get('modality') and state.get('prior') is not None and 'symmetry' in state.get('prior')",
+      "description": "点云+对称 → 等变网络",
+      "evidence": {
+        "kind": "heuristic",
+        "note": "点云+对称 -> 等变网络；非排行榜；未校准"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'candidate_families'",
+            "value": "等变网络 / 点云网络"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "C64",
+      "priority": 64,
+      "group": "candidate",
+      "condition": "state.get('modality') is not None and 'spatiotemporal' in state.get('modality')",
+      "description": "时空场 → CNN+RNN/神经算子",
+      "evidence": {
+        "kind": "heuristic",
+        "note": "时空场 -> CNN+RNN/神经算子；非排行榜；未校准"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'candidate_families'",
+            "value": "CNN+RNN / 神经算子"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "C65",
+      "priority": 65,
+      "group": "candidate",
+      "condition": "state.get('modality') is not None and 'table' in state.get('modality') and state.get('n_eff') is not None and state.get('n_eff') < 1000",
+      "description": "小表格 → 线性/树",
+      "evidence": {
+        "kind": "heuristic",
+        "note": "小表格 -> 线性/树；阈值 1000 未校准"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'candidate_families'",
+            "value": "线性回归 / 树模型（GBDT）"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "C66",
+      "priority": 66,
+      "group": "candidate",
+      "condition": "state.get('modality') is not None and 'table' in state.get('modality') and state.get('n_eff') is not None and state.get('n_eff') >= 1000",
+      "description": "大表格 → 树/MLP",
+      "evidence": {
+        "kind": "heuristic",
+        "note": "大表格 -> GBDT/MLP；阈值 1000 未校准"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'candidate_families'",
+            "value": "树模型（GBDT）/ MLP"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "C67",
+      "priority": 67,
+      "group": "candidate",
+      "condition": "state.get('prior') is not None and ('mechanism' in state.get('prior') or 'conservation' in state.get('prior'))",
+      "description": "机理/守恒 → PINN/机理代理",
+      "evidence": {
+        "kind": "heuristic",
+        "note": "机理/守恒 -> PINN/机理代理；未校准"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'candidate_families'",
+            "value": "PINN / 机理+MLP 代理"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "C68",
+      "priority": 68,
+      "group": "candidate",
+      "condition": "state.get('modality') is not None and 'pointcloud' in state.get('modality')",
+      "description": "点云 → 点云网络",
+      "evidence": {
+        "kind": "heuristic",
+        "note": "点云 -> 点云网络；非排行榜；未校准"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'candidate_families'",
+            "value": "点云网络（PointNet 类）"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "C69",
+      "priority": 69,
+      "group": "candidate",
+      "condition": "state.get('modality') is not None and 'graph' in state.get('modality') and (state.get('structure') is None or (state.get('structure') is not None and 'topology' not in state.get('structure')))",
+      "description": "图但拓扑未保留 → 图统计+树",
+      "evidence": {
+        "kind": "heuristic",
+        "note": "图但未保留拓扑 -> 图统计+树；未校准"
+      },
+      "actions": [
+        {
+          "atom_id": "append_once",
+          "params": {
+            "key": "'candidate_families'",
+            "value": "图统计特征 + 树模型"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "V01",
+      "priority": 90,
+      "group": "verdict",
+      "condition": "state.get('missing_inputs') is not None and state.get('verdict') is None",
+      "description": "信息不足：先补六问",
+      "evidence": {
+        "kind": "standard",
+        "note": "裁决顺序：缺项 -> 不出结论"
+      },
+      "actions": [
+        {
+          "atom_id": "set_default",
+          "params": {
+            "key": "'verdict'",
+            "value": "信息不足：先补六问"
+          }
+        },
+        {
+          "atom_id": "set_default",
+          "params": {
+            "key": "'next_action'",
+            "value": "补齐缺失项后重跑；不要先跑模型"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "V02",
+      "priority": 91,
+      "group": "verdict",
+      "condition": "state.get('missing_inputs') is None and state.get('red_flags') is not None and state.get('verdict') is None",
+      "description": "有红旗：先处理，别调参",
+      "evidence": {
+        "kind": "standard",
+        "note": "裁决顺序：红旗 -> 先处理再升级"
+      },
+      "actions": [
+        {
+          "atom_id": "set_default",
+          "params": {
+            "key": "'verdict'",
+            "value": "有红旗：先处理，别调参"
+          }
+        },
+        {
+          "atom_id": "set_default",
+          "params": {
+            "key": "'next_action'",
+            "value": "按必检项逐条处理后重跑；红旗未清零前不升级模型"
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "V03",
+      "priority": 92,
+      "group": "verdict",
+      "condition": "state.get('missing_inputs') is None and state.get('red_flags') is None and state.get('verdict') is None",
+      "description": "可进入基线",
+      "evidence": {
+        "kind": "standard",
+        "note": "裁决顺序：无缺项无红旗 -> 进入基线；'升级需三条判据' 的定义待补"
+      },
+      "actions": [
+        {
+          "atom_id": "set_default",
+          "params": {
+            "key": "'verdict'",
+            "value": "可进入基线：按任务书执行"
+          }
+        },
+        {
+          "atom_id": "set_default",
+          "params": {
+            "key": "'next_action'",
+            "value": "跑最小 baseline，记录分层误差、不确定性与适用域"
+          }
+        },
+        {
+          "atom_id": "set_default",
+          "params": {
+            "key": "'next_action_note'",
+            "value": "先建立地板，再谈升级；升级需三条判据同时满足"
+          }
+        }
+      ]
+    }
+  ]
+}

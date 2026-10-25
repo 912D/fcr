@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/fcr/rulepack.schema.json",
+  "title": "FCR Rulepack",
+  "description": "FCR 规则包格式 v1.0（冻结）。校验器实现的是本规范的子集；完整语义见 00-格式规范.md。",
+  "type": "object",
+  "required": ["format", "format_version", "id", "version", "title", "fields", "rules"],
+  "properties": {
+    "format": { "const": "fcr/rulepack" },
+    "format_version": { "const": "1.0" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "license": { "type": "string" },
+    "status": { "enum": ["draft", "stable"] },
+    "homepage": { "type": "string" },
+    "fields": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": { "enum": ["enum", "string", "number", "integer", "boolean", "array", "object"] },
+          "values": { "type": "array" },
+          "description": { "type": "string" },
+          "unit": { "type": "string" }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "type": { "const": "enum" } }, "required": ["type"] },
+            "then": { "required": ["values"] }
+          }
+        ],
+        "additionalProperties": true
+      }
+    },
+    "atoms": {
+      "oneOf": [
+        { "type": "array", "items": { "type": "string" } },
+        { "type": "object" }
+      ]
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["rule_id", "priority", "condition", "description", "actions"],
+        "properties": {
+          "rule_id": { "type": "string", "minLength": 1 },
+          "priority": { "type": "number" },
+          "group": { "type": "string" },
+          "condition": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "evidence": {
+            "type": "object",
+            "required": ["kind"],
+            "properties": {
+              "kind": { "enum": ["heuristic", "standard", "literature", "calibration"] },
+              "note": { "type": "string" },
+              "source": { "type": "string" }
+            },
+            "additionalProperties": true
+          },
+          "actions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["atom_id"],
+              "properties": {
+                "atom_id": { "enum": ["set_field", "set_default", "append_once"] },
+                "params": { "type": "object" },
+                "output": { "type": "string" }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

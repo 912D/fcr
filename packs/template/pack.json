@@ -1,0 +1,73 @@
+{
+  "format": "fcr/rulepack",
+  "format_version": "1.0",
+  "id": "template",
+  "version": "1.0.0",
+  "title": "空白规则包模板",
+  "description": "复制本文件到 packs/<你的领域>/pack.json，按 spec/00-格式规范.md 填写。三种规则的最小示范：缺项、红旗、结论。",
+  "license": "MIT",
+  "status": "draft",
+  "fields": {
+    "goal": { "type": "string", "description": "要判断的目标（示例字段）" },
+    "risk": { "type": "enum", "values": ["none", "known"], "description": "是否已知风险（示例字段）" }
+  },
+  "atoms": ["append_once", "set_default"],
+  "rules": [
+    {
+      "rule_id": "T01",
+      "priority": 1,
+      "group": "missing",
+      "condition": "state.get('goal') is None",
+      "description": "缺少目标",
+      "evidence": { "kind": "standard", "note": "完整性门控" },
+      "actions": [
+        { "atom_id": "append_once", "params": { "key": "'missing_inputs'", "value": "'目标'" } }
+      ]
+    },
+    {
+      "rule_id": "T20",
+      "priority": 20,
+      "group": "red",
+      "condition": "state.get('risk') == 'known'",
+      "description": "已知风险未处理",
+      "evidence": { "kind": "heuristic", "note": "示例规则；未校准" },
+      "actions": [
+        { "atom_id": "append_once", "params": { "key": "'red_flags'", "value": "'已知风险未处理'" } },
+        { "atom_id": "append_once", "params": { "key": "'required_checks'", "value": "'先处理该风险，再谈模型'" } }
+      ]
+    },
+    {
+      "rule_id": "T90",
+      "priority": 90,
+      "group": "verdict",
+      "condition": "state.get('missing_inputs') is not None and state.get('verdict') is None",
+      "description": "信息不足",
+      "evidence": { "kind": "standard", "note": "裁决顺序" },
+      "actions": [
+        { "atom_id": "set_default", "params": { "key": "'verdict'", "value": "'信息不足：先补输入'" } }
+      ]
+    },
+    {
+      "rule_id": "T91",
+      "priority": 91,
+      "group": "verdict",
+      "condition": "state.get('missing_inputs') is None and state.get('red_flags') is not None and state.get('verdict') is None",
+      "description": "有红旗",
+      "evidence": { "kind": "standard", "note": "裁决顺序" },
+      "actions": [
+        { "atom_id": "set_default", "params": { "key": "'verdict'", "value": "'有红旗：先处理'" } }
+      ]
+    },
+    {
+      "rule_id": "T92",
+      "priority": 92,
+      "group": "verdict",
+      "condition": "state.get('missing_inputs') is None and state.get('red_flags') is None and state.get('verdict') is None",
+      "description": "可进入下一步",
+      "evidence": { "kind": "standard", "note": "裁决顺序" },
+      "actions": [
+        { "atom_id": "set_default", "params": { "key": "'verdict'", "value": "'可进入下一步'" } }
+      ]
+    }
+  ]
+}

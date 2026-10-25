@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this repository or its rule packs, please cite it as below."
+title: "FCR: 科研 ML 前置校验的前向链规则引擎"
+abstract: "规则包格式（fcr/rulepack v1）、确定性前向链参考实现、无头 CLI 与领域规则包（科研 ML 六问、电池方向草案）。定位是检查表，不是模型推荐器。"
+authors:
+  - family-names: "邓"
+    given-names: "顺天"
+    alias: "Deng Shuntian"
+version: 1.0.0
+date-released: "2026-10-25"
+license: MIT
+repository-code: "https://github.com/<你的用户名>/fcr"
+keywords:
+  - rule engine
+  - scientific machine learning
+  - checklist
+  - reproducibility
+  - battery
+  - LLM-assisted authoring

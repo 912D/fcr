@@ -1,0 +1,43 @@
+{
+  "数据表": "电池 ML 前置校验示例",
+  "所属规则包": "battery-ml",
+  "说明": "演示两类典型电池 ML 任务的输入；_expected 仅用于回归对照，引擎忽略。",
+  "records": [
+    {
+      "案例": "电芯 RUL 预测（含删失、按行切分）",
+      "task": "rul_prediction",
+      "target": "剩余寿命（循环数）",
+      "label_source": "derived_same_curve",
+      "cell_unit": "cell",
+      "split_unit": "row",
+      "n_units": 48,
+      "censoring": "right_censored",
+      "protocol_count": 2,
+      "temp_range": "25-35C",
+      "c_rate_range": "0.5-1C",
+      "label_window_overlap": "partial",
+      "delivery": ["uncertainty", "alarm"],
+      "prior": ["mechanism"],
+      "baseline": "transformer",
+      "_expected": { "verdict": "有红旗：先处理，别调参" }
+    },
+    {
+      "案例": "材料性质回归（干净数据）",
+      "task": "material_property",
+      "target": "离子电导率",
+      "label_source": "measured_directly",
+      "cell_unit": "material",
+      "split_unit": "batch",
+      "n_units": 1200,
+      "censoring": "none",
+      "protocol_count": 1,
+      "temp_range": "20-30C",
+      "c_rate_range": "n/a",
+      "label_window_overlap": "none",
+      "delivery": ["uncertainty"],
+      "prior": ["none_known"],
+      "baseline": "linear_tree",
+      "_expected": { "verdict": "可进入基线：按任务书执行" }
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "数据表": "数据_科研选型_示例",
+  "所属规则包": "sci-ml-six-questions",
+  "说明": "每条记录 = 一个研究案例的六问填空。只填输入字段，输出字段由前向链补上。_expected 仅用于回归对照，引擎忽略它。",
+  "records": [
+    {
+      "案例": "铝合金热导率筛选",
+      "goal_type": "regression",
+      "metric": "mae",
+      "task_use": "由成分与热处理预测热导率，输出给实验同学决定下一炉炼什么",
+      "sample_unit": "structure",
+      "n_eff": 41,
+      "leakage": [
+        "same_system"
+      ],
+      "modality": [
+        "table"
+      ],
+      "structure": [
+        "composition"
+      ],
+      "label_ratio": "all",
+      "quality": [
+        "measurement_error"
+      ],
+      "prior": [
+        "monotonic",
+        "infeasible"
+      ],
+      "delivery": [
+        "uncertainty",
+        "extrapolation"
+      ],
+      "baseline": "linear_tree",
+      "data_source": "literature",
+      "field_domain": "铝合金热导率",
+      "_expected": {
+        "verdict": "有红旗：先处理，别调参"
+      }
+    },
+    {
+      "案例": "显微图像缺陷分类",
+      "goal_type": "classification",
+      "metric": "f1",
+      "task_use": "从金相图判断缺陷类别，辅助质检",
+      "sample_unit": "image_field",
+      "n_eff": 800,
+      "leakage": [
+        "same_field"
+      ],
+      "modality": [
+        "image"
+      ],
+      "structure": [
+        "neighborhood"
+      ],
+      "label_ratio": "half",
+      "quality": [
+        "imbalance"
+      ],
+      "prior": [
+        "locality"
+      ],
+      "delivery": [
+        "explanation"
+      ],
+      "baseline": "cnn",
+      "data_source": "experiment",
+      "field_domain": "金相缺陷",
+      "_expected": {
+        "verdict": "有红旗：先处理，别调参"
+      }
+    },
+    {
+      "案例": "工艺参数-性能回归（干净数据）",
+      "goal_type": "regression",
+      "metric": "rmse",
+      "task_use": "预测烧结件强度，用于工艺窗口筛选",
+      "sample_unit": "experiment",
+      "n_eff": 5000,
+      "leakage": [],
+      "modality": [
+        "table"
+      ],
+      "structure": [
+        "composition"
+      ],
+      "label_ratio": "all",
+      "quality": [
+        "duplicate"
+      ],
+      "prior": [
+        "none_known"
+      ],
+      "delivery": [
+        "uncertainty"
+      ],
+      "baseline": "linear_tree",
+      "data_source": "experiment",
+      "field_domain": "烧结件强度",
+      "_expected": {
+        "verdict": "可进入基线：按任务书执行"
+      }
+    }
+  ]
+}

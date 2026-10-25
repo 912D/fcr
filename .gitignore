@@ -1,0 +1,21 @@
+# 依赖与构建
+node_modules/
+_build/
+dist/
+
+# 运行时产物
+*.log
+edge-profile/
+.tmp/
+
+# Python（仓库自带的只有 Node 代码）
+.venv/
+__pycache__/
+*.pyc
+
+# 编辑器与系统
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
